@@ -31,6 +31,8 @@ def _make_jarvis(monkeypatch, responses):
     j.model = "claude-sonnet-5"
     j.system_prompt = "test system prompt"
     j.history = []
+    j.tools = brain.TOOLS
+    j.tool_runner = None
     return j
 
 

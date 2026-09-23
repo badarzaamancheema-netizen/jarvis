@@ -59,6 +59,62 @@ python -m jarvis.main
 Configurable via `.env`: `USER_NAME` (what Jarvis calls you), `JARVIS_WAKE_WORD`
 (default `jarvis`), `ANTHROPIC_MODEL`, `JARVIS_TTS_RATE`.
 
+## On your phone ("Hi Jarvis" / "Jarvis open")
+
+`python -m jarvis.server` serves Jarvis as an installable phone app (a PWA),
+so you don't need an app store. While the app is open it listens for **"Hi Jarvis"**,
+**"Hey Jarvis"** or **"Jarvis open"**. You can say the command in the same
+breath ("Hi Jarvis, what's the weather in Lahore") or wait for "Yes, sir?". After
+each answer it keeps listening for a few seconds so you can follow up without
+saying the wake word again.
+
+On the phone it can also: open apps and sites (YouTube, WhatsApp, Instagram,
+Maps, Gmail, Spotify…), start a call, prefill an SMS or WhatsApp message,
+start Google Maps directions, and search/play on YouTube. Reminders are spoken
+and shown as notifications while the app is open, using your phone's clock.
+
+### Limits to know first
+
+- **Nothing can listen for "Hi Jarvis" while your phone is locked or the app is
+  closed.** Android and iOS only let their own assistants (Google/Siri) do that.
+  So you launch Jarvis *through* them, like this:
+  - **iPhone:** Shortcuts app → **+** → *Add Action* → **Open URLs** → your
+    Jarvis URL followed by `/?wake=1` → name the shortcut **"Jarvis open"**.
+    Then say *"Hey Siri, Jarvis open"*.
+  - **Android:** install the app (Chrome menu → *Add to Home screen / Install
+    app*), then say *"Hey Google, open Jarvis"*. For a custom phrase like
+    "Hi Jarvis", create a Google Assistant **Routine** with that starter phrase
+    and the action *"open Jarvis"*.
+  Opened that way, Jarvis goes straight to "Yes, sir?".
+- While Jarvis is open it keeps the screen on so the mic keeps working. If you
+  leave it open all day, keep the phone plugged in.
+- The first launch needs one tap (**Activate**), because browsers only allow
+  the mic and speech after you touch the screen.
+- Your phone may block Jarvis from opening another app (call, YouTube…)
+  without a tap. When it does, tap the button under Jarvis's reply.
+- Voice needs Chrome on Android or Safari on iPhone. Typing works everywhere.
+- It can't read your contacts: say or type the number.
+
+### Setup
+
+1. On a computer (or a cheap cloud server) that stays on:
+   ```bash
+   pip install -r requirements-server.txt
+   cp .env.example .env   # add ANTHROPIC_API_KEY and JARVIS_ACCESS_TOKEN
+   python -m jarvis.server  # listens on port 8000
+   ```
+   `JARVIS_ACCESS_TOKEN` is the password your phone uses. The server won't
+   start without it, because anyone who can reach it could otherwise spend
+   your Anthropic credit and read your notes.
+2. **Give it an HTTPS address.** Phones only allow the microphone on `https://`
+   pages, so `http://192.168.x.x:8000` won't work for voice. The easiest options:
+   - [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/):
+     `cloudflared tunnel --url http://localhost:8000` prints a public `https://…trycloudflare.com` URL.
+   - [Tailscale](https://tailscale.com/kb/1223/funnel): `tailscale serve 8000` (private to your own devices).
+3. Open that URL on your phone, enter the token, tap **Activate**, and allow the
+   microphone. Then install it to your home screen and set up the Siri or
+   Google shortcut above.
+
 ## Notes on the voice pipeline
 
 There's no bundled dedicated wake-word engine (accurate ones like Porcupine
@@ -75,8 +131,9 @@ speaker path itself should get a real smoke test on your machine.
 ## Tests
 
 ```bash
-pip install pytest
+pip install pytest httpx -r requirements-server.txt
 pytest
+node --test tests/web/*.test.js   # wake-phrase parser
 ```
 
 ## Project layout
@@ -91,6 +148,9 @@ jarvis/
   system_control.py    # safe app/URL/volume/system-info actions
   reminder_watcher.py  # background thread that fires due reminders
   config.py            # .env-driven settings
+  server.py            # phone app server (FastAPI) + JSON API
+  mobile_tools.py      # phone-side tools (call, SMS, WhatsApp, maps, YouTube…)
+  web/                 # the installable phone app (HTML/JS, service worker)
   voice/
     listener.py        # mic input, wake-word + STT
     speaker.py          # TTS output

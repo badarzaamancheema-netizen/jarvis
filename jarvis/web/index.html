@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#05080f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Jarvis">
+  <title>Jarvis</title>
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <link rel="icon" href="/static/icon-192.png">
+  <link rel="apple-touch-icon" href="/static/icon-192.png">
+  <style>
+    :root {
+      --bg: #05080f; --panel: #0c1320; --line: #1b2a40; --text: #e6f1ff;
+      --dim: #7d93b2; --accent: #38bdf8; --accent-2: #0ea5e9; --warn: #f59e0b; --bad: #f87171;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+      font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    body { display: flex; flex-direction: column; padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom); }
+    header { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; }
+    header h1 { font-size: 15px; letter-spacing: .3em; margin: 0; color: var(--accent); }
+    header button { background: none; border: 1px solid var(--line); color: var(--dim); border-radius: 8px; padding: 6px 10px; font-size: 13px; }
+
+    #stage { display: flex; flex-direction: column; align-items: center; padding: 8px 0 12px; }
+    #orb { width: 150px; height: 150px; border-radius: 50%; border: 0; cursor: pointer;
+      background: radial-gradient(circle at 50% 45%, #7dd3fc 0%, #0ea5e9 30%, #075985 60%, #05080f 72%);
+      box-shadow: 0 0 40px #0ea5e955; transition: transform .25s, box-shadow .25s, filter .25s; filter: saturate(.5) brightness(.7); }
+    body[data-state="wake"] #orb { filter: none; animation: breathe 3.5s ease-in-out infinite; }
+    body[data-state="command"] #orb { filter: none; transform: scale(1.08); box-shadow: 0 0 70px #38bdf8aa; animation: pulse .9s ease-in-out infinite; }
+    body[data-state="thinking"] #orb { filter: none; animation: spin 1.2s linear infinite; }
+    body[data-state="speaking"] #orb { filter: none; animation: pulse .5s ease-in-out infinite; }
+    @keyframes breathe { 50% { box-shadow: 0 0 60px #0ea5e988; } }
+    @keyframes pulse { 50% { transform: scale(1.14); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #status { margin-top: 14px; color: var(--dim); font-size: 14px; text-align: center; min-height: 20px; }
+    #heard { color: var(--text); font-size: 13px; opacity: .6; min-height: 18px; text-align: center; margin-top: 4px; }
+
+    #log { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; }
+    .msg { max-width: 85%; padding: 9px 12px; border-radius: 14px; white-space: pre-wrap; word-wrap: break-word; }
+    .msg.you { align-self: flex-end; background: var(--accent-2); color: #001018; border-bottom-right-radius: 4px; }
+    .msg.jarvis { align-self: flex-start; background: var(--panel); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+    .msg.system { align-self: center; color: var(--dim); font-size: 13px; background: none; }
+    .msg.error { align-self: center; color: var(--bad); font-size: 13px; }
+    .action { display: inline-block; margin-top: 6px; padding: 7px 12px; border-radius: 999px; background: var(--accent);
+      color: #001018; text-decoration: none; font-weight: 600; font-size: 14px; }
+
+    form#ask { display: flex; gap: 8px; padding: 8px 0 12px; }
+    form#ask input { flex: 1; min-width: 0; background: var(--panel); color: var(--text); border: 1px solid var(--line);
+      border-radius: 12px; padding: 12px; font-size: 16px; }
+    form#ask button { background: var(--accent); color: #001018; border: 0; border-radius: 12px; padding: 0 16px; font-weight: 700; font-size: 16px; }
+
+    .overlay { position: fixed; inset: 0; background: #05080ff2; display: flex; align-items: center; justify-content: center; padding: 24px; z-index: 5; }
+    .overlay[hidden] { display: none; }
+    .card { width: 100%; max-width: 380px; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+    .card h2 { margin: 0 0 8px; font-size: 18px; }
+    .card p { color: var(--dim); margin: 0 0 14px; font-size: 14px; }
+    .card input { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 16px; margin-bottom: 12px; }
+    .card button { width: 100%; background: var(--accent); color: #001018; border: 0; border-radius: 10px; padding: 12px; font-weight: 700; font-size: 16px; }
+    .card label { display: flex; gap: 10px; align-items: center; color: var(--dim); font-size: 14px; margin-bottom: 12px; }
+    .card label input { width: auto; margin: 0; }
+  </style>
+</head>
+<body data-state="off">
+  <header>
+    <h1>J.A.R.V.I.S.</h1>
+    <div>
+      <button id="resetBtn" type="button">New chat</button>
+      <button id="settingsBtn" type="button">Settings</button>
+    </div>
+  </header>
+
+  <div id="stage">
+    <button id="orb" type="button" aria-label="Talk to Jarvis"></button>
+    <div id="status">Tap the orb to start</div>
+    <div id="heard"></div>
+  </div>
+
+  <div id="log" aria-live="polite"></div>
+
+  <form id="ask" autocomplete="off">
+    <input id="askInput" placeholder="Or type to Jarvis…" enterkeyhint="send">
+    <button type="submit">➤</button>
+  </form>
+
+  <div class="overlay" id="setup" hidden>
+    <form class="card" id="setupForm">
+      <h2>Connect to Jarvis</h2>
+      <p>Enter the access token from your server's <code>.env</code> (JARVIS_ACCESS_TOKEN). It's stored only on this phone.</p>
+      <input id="tokenInput" type="password" placeholder="Access token" autocomplete="current-password" required>
+      <label><input type="checkbox" id="followUpInput" checked> Keep listening for a follow-up after each answer</label>
+      <button type="submit">Connect</button>
+    </form>
+  </div>
+
+  <div class="overlay" id="tapToStart" hidden>
+    <div class="card" style="text-align:center">
+      <h2>Jarvis is ready</h2>
+      <p>Your phone needs one tap before Jarvis can use the mic and speak.</p>
+      <button id="tapToStartBtn" type="button">Activate</button>
+    </div>
+  </div>
+
+  <script src="/static/wake.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

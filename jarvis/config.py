@@ -21,6 +21,7 @@ class Settings:
     user_name: str = field(default_factory=lambda: os.environ.get("USER_NAME", "sir"))
     wake_word: str = field(default_factory=lambda: os.environ.get("JARVIS_WAKE_WORD", "jarvis").lower())
     tts_rate: int = field(default_factory=lambda: int(os.environ.get("JARVIS_TTS_RATE", "185")))
+    access_token: str = field(default_factory=lambda: os.environ.get("JARVIS_ACCESS_TOKEN", ""))
 
     def require_api_key(self) -> str:
         if not self.anthropic_api_key:

@@ -1,0 +1,8 @@
+# Just what the phone-app server needs (no microphone/speaker libraries, so it
+# installs cleanly on a cloud host). The desktop voice mode uses requirements.txt.
+anthropic>=0.40.0
+python-dotenv>=1.0.1
+requests>=2.31.0
+ddgs>=6.0.0
+fastapi>=0.110.0
+uvicorn>=0.29.0

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Jarvis" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:colorAccent">@color/accent</item>
+        <item name="android:colorPrimary">@color/bg</item>
+        <item name="android:statusBarColor">@color/bg</item>
+        <item name="android:navigationBarColor">@color/bg</item>
+        <item name="android:textColor">@color/text</item>
+    </style>
+
+    <style name="Jarvis.Button" parent="@android:style/Widget.Material.Button.Borderless">
+        <item name="android:textColor">@color/text</item>
+        <item name="android:background">@drawable/button</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:layout_marginTop">6dp</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+    </style>
+
+    <style name="Jarvis.Button.Primary">
+        <item name="android:textColor">@color/on_accent</item>
+        <item name="android:background">@drawable/button_primary</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Jarvis.Input" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/input</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:textColor">@color/text</item>
+        <item name="android:textColorHint">@color/dim</item>
+        <item name="android:layout_marginBottom">10dp</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
+    <style name="Jarvis.Label" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/dim</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:layout_marginBottom">4dp</item>
+    </style>
+</resources>

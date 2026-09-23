@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:letterSpacing="0.3"
+        android:text="J.A.R.V.I.S."
+        android:textColor="@color/accent"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="@color/dim"
+        android:textSize="14sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/toggleListen"
+            style="@style/Jarvis.Button.Primary"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Start listening" />
+
+        <Button
+            android:id="@+id/talkNow"
+            style="@style/Jarvis.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="Talk now" />
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/logScroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="12dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/settings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/panel"
+                android:orientation="vertical"
+                android:padding="14dp"
+                android:visibility="gone">
+
+                <TextView style="@style/Jarvis.Label" android:text="Anthropic API key" />
+                <EditText
+                    android:id="@+id/apiKey"
+                    style="@style/Jarvis.Input"
+                    android:hint="sk-ant-…"
+                    android:inputType="textPassword" />
+
+                <TextView style="@style/Jarvis.Label" android:text="What should Jarvis call you?" />
+                <EditText
+                    android:id="@+id/userName"
+                    style="@style/Jarvis.Input"
+                    android:hint="sir"
+                    android:inputType="textPersonName" />
+
+                <TextView style="@style/Jarvis.Label" android:text="Claude model" />
+                <EditText
+                    android:id="@+id/model"
+                    style="@style/Jarvis.Input"
+                    android:inputType="text" />
+
+                <Button
+                    android:id="@+id/save"
+                    style="@style/Jarvis.Button.Primary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Save" />
+
+                <TextView
+                    style="@style/Jarvis.Label"
+                    android:layout_marginTop="14dp"
+                    android:text="Optional permissions (each makes Jarvis more capable)" />
+
+                <Button
+                    android:id="@+id/permOverlay"
+                    style="@style/Jarvis.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Let Jarvis open apps when the screen is off" />
+
+                <Button
+                    android:id="@+id/permContacts"
+                    style="@style/Jarvis.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Let Jarvis find contacts (&quot;call Mom&quot;)" />
+
+                <Button
+                    android:id="@+id/permBattery"
+                    style="@style/Jarvis.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Stop Android killing Jarvis (battery)" />
+
+                <Button
+                    android:id="@+id/permAlarms"
+                    style="@style/Jarvis.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="On-time reminders (alarms &amp; reminders)" />
+
+                <Button
+                    android:id="@+id/newChat"
+                    style="@style/Jarvis.Button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Start a new conversation" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/log"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/input"
+            style="@style/Jarvis.Input"
+            android:layout_width="0dp"
+            android:layout_marginBottom="0dp"
+            android:layout_weight="1"
+            android:hint="Or type to Jarvis…"
+            android:imeOptions="actionSend"
+            android:inputType="textCapSentences" />
+
+        <Button
+            android:id="@+id/send"
+            style="@style/Jarvis.Button.Primary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="Send" />
+
+        <Button
+            android:id="@+id/settingsBtn"
+            style="@style/Jarvis.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="⚙" />
+    </LinearLayout>
+</LinearLayout>

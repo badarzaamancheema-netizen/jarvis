@@ -1,5 +1,9 @@
 # Jarvis
 
+> **On Android?** Use the native app in [`android/`](android/README.md). It listens
+> for "Hi Jarvis" even with the screen off, and you install it straight from
+> this repo's Releases page with no computer needed.
+
 A personal voice assistant in the style of Tony Stark's J.A.R.V.I.S.: wake word
 + voice conversation, powered by Claude for reasoning and tool use, with
 built-in tasks, reminders, notes, live weather/web-search lookups, and a

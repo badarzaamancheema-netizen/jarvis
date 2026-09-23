@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
@@ -34,37 +34,41 @@ jobs:
         run: ./gradlew :core:test
 
       # New builds only install over old ones when signed with the same key.
-      # Best: add a JARVIS_KEYSTORE_BASE64 + JARVIS_KEYSTORE_PASSWORD secret (see README).
-      # Otherwise the debug key is cached between builds.
-      - name: Use signing key from secrets (optional)
+      # Best: add JARVIS_KEYSTORE_BASE64 + JARVIS_KEYSTORE_PASSWORD secrets (see android/README.md).
+      # Otherwise a key is generated once and kept in the Actions cache.
+      - name: Restore cached signing key
+        uses: actions/cache@v4
+        with:
+          path: ~/.jarvis-signing
+          key: jarvis-signing-key-v1
+
+      - name: Set up signing key
         env:
           KEYSTORE_B64: ${{ secrets.JARVIS_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.JARVIS_KEYSTORE_PASSWORD }}
         run: |
           if [ -n "$KEYSTORE_B64" ]; then
             echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/jarvis.jks"
             echo "JARVIS_KEYSTORE_FILE=$RUNNER_TEMP/jarvis.jks" >> "$GITHUB_ENV"
+            echo "JARVIS_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+          else
+            mkdir -p ~/.jarvis-signing
+            if [ ! -f ~/.jarvis-signing/jarvis-ci.jks ]; then
+              keytool -genkeypair -keystore ~/.jarvis-signing/jarvis-ci.jks -alias jarvis -keyalg RSA -keysize 2048 \
+                -validity 10000 -storepass jarvis-ci -keypass jarvis-ci -dname "CN=Jarvis"
+            fi
+            echo "JARVIS_KEYSTORE_FILE=$HOME/.jarvis-signing/jarvis-ci.jks" >> "$GITHUB_ENV"
+            echo "JARVIS_KEYSTORE_PASSWORD=jarvis-ci" >> "$GITHUB_ENV"
           fi
-
-      - name: Reuse debug signing key
-        uses: actions/cache@v4
-        with:
-          path: ~/.android/debug.keystore
-          key: jarvis-debug-keystore-v1
 
       - name: Build APK
-        env:
-          JARVIS_KEYSTORE_PASSWORD: ${{ secrets.JARVIS_KEYSTORE_PASSWORD }}
         run: ./gradlew :app:assembleDebug
 
-      - name: Check the wake word is in the speech model's vocabulary
+      - name: Wake word test (spoken "hi jarvis" through the app's model and grammar)
         run: |
-          ZIP=app/build/generated/voskAssets/vosk-model.zip
-          unzip -l "$ZIP" | grep -Ei "graph|words" || true
-          if unzip -p "$ZIP" '*/graph/words.txt' 2>/dev/null | awk '{print $1}' | grep -qx jarvis; then
-            echo "OK: 'jarvis' is in the model vocabulary"
-          else
-            echo "::warning::Could not confirm 'jarvis' is in the Vosk model vocabulary"
-          fi
+          sudo apt-get update -qq && sudo apt-get install -y -qq espeak-ng sox > /dev/null
+          pip install -q vosk
+          python tools/wake_smoke_test.py app/build/generated/voskAssets/vosk-model.zip
 
       - name: Rename APK
         run: cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/Jarvis.apk"

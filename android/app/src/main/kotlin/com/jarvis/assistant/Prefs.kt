@@ -7,20 +7,44 @@ import com.jarvis.core.DEFAULT_MODEL
 class Prefs(context: Context) {
     private val sp = context.getSharedPreferences("jarvis", Context.MODE_PRIVATE)
 
-    var apiKey: String
-        get() = sp.getString("api_key", "") ?: ""
-        set(v) = sp.edit().putString("api_key", v.trim()).apply()
+    private fun str(key: String, default: String = "") = sp.getString(key, default) ?: default
+    private fun put(key: String, value: String) = sp.edit().putString(key, value.trim()).apply()
+
+    /** "gemini" (free tier, the default) or "claude" (paid). */
+    var provider: String
+        get() = str("provider", GEMINI)
+        set(v) = put("provider", v)
+
+    var geminiKey: String
+        get() = str("gemini_key")
+        set(v) = put("gemini_key", v)
+
+    /** Blank means "pick the newest free Flash model automatically". */
+    var geminiModel: String
+        get() = str("gemini_model")
+        set(v) = put("gemini_model", v)
+
+    var claudeKey: String
+        get() = str("api_key")
+        set(v) = put("api_key", v)
+
+    var claudeModel: String
+        get() = str("model", DEFAULT_MODEL).ifBlank { DEFAULT_MODEL }
+        set(v) = put("model", v)
+
+    val activeKey: String get() = if (provider == CLAUDE) claudeKey else geminiKey
 
     var userName: String
-        get() = sp.getString("user_name", "sir")?.ifBlank { "sir" } ?: "sir"
-        set(v) = sp.edit().putString("user_name", v.trim()).apply()
-
-    var model: String
-        get() = sp.getString("model", DEFAULT_MODEL)?.ifBlank { DEFAULT_MODEL } ?: DEFAULT_MODEL
-        set(v) = sp.edit().putString("model", v.trim()).apply()
+        get() = str("user_name", "sir").ifBlank { "sir" }
+        set(v) = put("user_name", v)
 
     /** Whether the user left "always listen" on, so the button shows the right state. */
     var listening: Boolean
         get() = sp.getBoolean("listening", false)
         set(v) = sp.edit().putBoolean("listening", v).apply()
+
+    companion object {
+        const val GEMINI = "gemini"
+        const val CLAUDE = "claude"
+    }
 }

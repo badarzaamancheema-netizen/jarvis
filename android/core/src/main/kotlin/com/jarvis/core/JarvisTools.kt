@@ -12,7 +12,8 @@ class JarvisTools(
     private val phone: PhoneActions,
     private val now: () -> LocalDateTime = { LocalDateTime.now() },
 ) {
-    val definitions: List<Tool> = listOf(
+    /** Provider-neutral tool list; each AI provider converts it to its own format. */
+    val specs: List<ToolSpec> = listOf(
         tool("add_task", "Add an item to the user's to-do list.", mapOf("description" to str()), listOf("description")),
         tool("list_tasks", "List the user's open to-do items with their ids.", emptyMap()),
         tool("complete_task", "Mark a to-do item as done by its id from list_tasks.", mapOf("task_id" to int()), listOf("task_id")),
@@ -59,6 +60,9 @@ class JarvisTools(
         tool("set_volume", "Set media volume, 0-100.", mapOf("percent" to int()), listOf("percent")),
         tool("battery_status", "Get battery level and whether the phone is charging.", emptyMap()),
     )
+
+    /** The same tools in Anthropic's format. */
+    val definitions: List<Tool> by lazy { specs.map { it.toAnthropic() } }
 
     /** Runs one tool call. Returns (result text, isError). Never throws. */
     fun run(name: String, input: Map<*, *>): Pair<String, Boolean> =
@@ -137,20 +141,30 @@ class JarvisTools(
         fun str() = mapOf("type" to "string")
         fun int() = mapOf("type" to "integer")
 
-        fun tool(name: String, description: String, props: Map<String, Map<String, String>>, required: List<String> = emptyList()): Tool =
-            Tool.builder()
-                .name(name)
-                .description(description)
-                .inputSchema(
-                    Tool.InputSchema.builder()
-                        .properties(
-                            Tool.InputSchema.Properties.builder()
-                                .apply { props.forEach { (key, schema) -> putAdditionalProperty(key, JsonValue.from(schema)) } }
-                                .build(),
-                        )
-                        .required(required)
-                        .build(),
-                )
-                .build()
+        fun tool(name: String, description: String, props: Map<String, Map<String, String>>, required: List<String> = emptyList()) =
+            ToolSpec(name, description, props, required)
     }
+}
+
+data class ToolSpec(
+    val name: String,
+    val description: String,
+    val properties: Map<String, Map<String, String>>,
+    val required: List<String>,
+) {
+    fun toAnthropic(): Tool =
+        Tool.builder()
+            .name(name)
+            .description(description)
+            .inputSchema(
+                Tool.InputSchema.builder()
+                    .properties(
+                        Tool.InputSchema.Properties.builder()
+                            .apply { properties.forEach { (key, schema) -> putAdditionalProperty(key, JsonValue.from(schema)) } }
+                            .build(),
+                    )
+                    .required(required)
+                    .build(),
+            )
+            .build()
 }

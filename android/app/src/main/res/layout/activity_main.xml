@@ -69,11 +69,38 @@
                 android:padding="14dp"
                 android:visibility="gone">
 
-                <TextView style="@style/Jarvis.Label" android:text="Anthropic API key" />
+                <TextView style="@style/Jarvis.Label" android:text="AI brain" />
+                <RadioGroup
+                    android:id="@+id/provider"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp">
+
+                    <RadioButton
+                        android:id="@+id/providerGemini"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/accent"
+                        android:text="Free: Google Gemini (free key, daily limits)"
+                        android:textColor="@color/text" />
+
+                    <RadioButton
+                        android:id="@+id/providerClaude"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/accent"
+                        android:text="Claude (paid per use, smarter)"
+                        android:textColor="@color/text" />
+                </RadioGroup>
+
+                <TextView
+                    android:id="@+id/keyHelp"
+                    style="@style/Jarvis.Label"
+                    android:autoLink="web"
+                    android:textColorLink="@color/accent" />
                 <EditText
                     android:id="@+id/apiKey"
                     style="@style/Jarvis.Input"
-                    android:hint="sk-ant-…"
                     android:inputType="textPassword" />
 
                 <TextView style="@style/Jarvis.Label" android:text="What should Jarvis call you?" />
@@ -83,7 +110,7 @@
                     android:hint="sir"
                     android:inputType="textPersonName" />
 
-                <TextView style="@style/Jarvis.Label" android:text="Claude model" />
+                <TextView style="@style/Jarvis.Label" android:text="Model (leave as is unless you know you need another)" />
                 <EditText
                     android:id="@+id/model"
                     style="@style/Jarvis.Input"

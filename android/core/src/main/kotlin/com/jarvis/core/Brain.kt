@@ -13,8 +13,6 @@ import com.anthropic.models.messages.TextBlockParam
 import com.anthropic.models.messages.ToolResultBlockParam
 import com.anthropic.models.messages.WebSearchTool20260209
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 const val DEFAULT_MODEL = "claude-opus-5"
 
@@ -28,27 +26,20 @@ class Brain(
     private val model: String = DEFAULT_MODEL,
     private val userName: String = "sir",
     private val clock: () -> ZonedDateTime = { ZonedDateTime.now() },
-) {
-    private val systemPrompt = """
-        You are Jarvis, a witty, imperturbably composed personal AI assistant in the mold of Tony Stark's J.A.R.V.I.S., running on the user's Android phone. Address the user as "$userName".
-        Your replies are spoken aloud: keep them to one or two short sentences unless asked for detail, and never use markdown, lists, links or emoji. Latency-sensitive; begin your visible answer immediately.
-        Use your tools rather than guessing: web_search for anything current (news, weather, scores, prices), the phone tools to open apps and websites, call, text, WhatsApp, navigate, play things on YouTube, set alarms and timers, and control the flashlight and volume, and the task, note and reminder tools to keep track of things.
-        To call or text someone by name, look them up with find_contact first; if there are several numbers, ask which one.
-        Each user message starts with the phone's local time in brackets; use it for reminders and anything time-related.
-        Never claim you did something unless a tool result says it happened.
-    """.trimIndent()
+) : Assistant {
+    private val systemPrompt = Persona.systemPrompt(userName)
 
     private val history = mutableListOf<MessageParam>()
     private var lastAsk: ZonedDateTime? = null
 
     @Synchronized
-    fun reset() {
+    override fun reset() {
         history.clear()
     }
 
     /** Sends one user turn and returns Jarvis's spoken reply. Throws on network/API errors. */
     @Synchronized
-    fun ask(userText: String): String {
+    override fun ask(userText: String): String {
         val now = clock()
         // Start fresh after a long pause or a long conversation: keeps requests
         // cheap and fast, and old context rarely matters to a voice assistant.
@@ -56,7 +47,7 @@ class Brain(
         lastAsk = now
 
         val startSize = history.size
-        history.add(userMessage("[${now.format(TIME_FORMAT)}]\n$userText"))
+        history.add(userMessage(Persona.stamp(now, userText)))
         try {
             repeat(MAX_ROUNDS) {
                 val response = client.messages().create(buildParams())
@@ -125,7 +116,6 @@ class Brain(
 
     private companion object {
         const val MAX_ROUNDS = 8
-        val TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy, HH:mm, VV", Locale.ENGLISH)
 
         fun userMessage(text: String): MessageParam =
             MessageParam.builder().role(MessageParam.Role.USER).content(text).build()

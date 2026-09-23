@@ -16,6 +16,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.RadioGroup
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
@@ -89,10 +90,10 @@ class MainActivity : Activity() {
             }
         }
 
-        if (app.prefs.apiKey.isBlank()) {
+        if (app.prefs.activeKey.isBlank()) {
             settings.visibility = View.VISIBLE
             fillSettings()
-            app.addLine("Jarvis", "Welcome. Paste your Anthropic API key in the settings above and tap Save.")
+            app.addLine("Jarvis", "Welcome. Jarvis is free to use with a Google Gemini key: follow the link in Settings above, paste the key, and tap Save.")
         }
         handleLaunch(intent)
     }
@@ -104,10 +105,10 @@ class MainActivity : Activity() {
 
     /** Opened by "Hey Google, open Jarvis" or the assistant gesture: start listening right away. */
     private fun handleLaunch(intent: Intent?) {
-        if (intent?.action == Intent.ACTION_ASSIST && app.prefs.apiKey.isNotBlank() && hasMic()) {
+        if (intent?.action == Intent.ACTION_ASSIST && app.prefs.activeKey.isNotBlank() && hasMic()) {
             app.prefs.listening = true
             WakeService.start(this, listenNow = true)
-        } else if (app.prefs.listening && !WakeService.running && hasMic() && app.prefs.apiKey.isNotBlank()) {
+        } else if (app.prefs.listening && !WakeService.running && hasMic() && app.prefs.activeKey.isNotBlank()) {
             // Resume after the phone restarted or Android stopped the service.
             WakeService.start(this)
         }
@@ -133,21 +134,60 @@ class MainActivity : Activity() {
         app.ask(text) { reply -> app.speaker.say(reply) }
     }
 
+    /** Provider shown in the settings form (saved only when the user taps Save). */
+    private var formProvider = Prefs.GEMINI
+
     private fun fillSettings() {
-        findViewById<EditText>(R.id.apiKey).setText(app.prefs.apiKey)
+        formProvider = app.prefs.provider
+        findViewById<RadioGroup>(R.id.provider).apply {
+            setOnCheckedChangeListener(null)
+            check(if (formProvider == Prefs.CLAUDE) R.id.providerClaude else R.id.providerGemini)
+            setOnCheckedChangeListener { _, id ->
+                formProvider = if (id == R.id.providerClaude) Prefs.CLAUDE else Prefs.GEMINI
+                showProviderFields()
+            }
+        }
         findViewById<EditText>(R.id.userName).setText(app.prefs.userName)
-        findViewById<EditText>(R.id.model).setText(app.prefs.model)
+        showProviderFields()
+    }
+
+    private fun showProviderFields() {
+        val claude = formProvider == Prefs.CLAUDE
+        findViewById<TextView>(R.id.keyHelp).text = if (claude) {
+            "Anthropic API key (starts with sk-ant-). Get one at https://console.anthropic.com. Billed per use."
+        } else {
+            "Free Gemini API key. Sign in at https://aistudio.google.com/apikey with your Google account and tap Create API key. No card needed."
+        }
+        findViewById<EditText>(R.id.apiKey).apply {
+            setText(if (claude) app.prefs.claudeKey else app.prefs.geminiKey)
+            hint = if (claude) "sk-ant-…" else "AIza…"
+        }
+        findViewById<EditText>(R.id.model).apply {
+            setText(if (claude) app.prefs.claudeModel else app.prefs.geminiModel)
+            hint = if (claude) "claude-opus-5" else "automatic (newest free Flash model)"
+        }
     }
 
     private fun saveSettings() {
         val key = findViewById<EditText>(R.id.apiKey).text.toString().trim()
-        if (!key.startsWith("sk-ant-")) {
-            toast("That doesn't look like an Anthropic API key (they start with sk-ant-).")
-            return
+        val model = findViewById<EditText>(R.id.model).text.toString()
+        if (formProvider == Prefs.CLAUDE) {
+            if (!key.startsWith("sk-ant-")) {
+                toast("That doesn't look like an Anthropic API key (they start with sk-ant-).")
+                return
+            }
+            app.prefs.claudeKey = key
+            app.prefs.claudeModel = model
+        } else {
+            if (key.length < 20 || key.contains(' ')) {
+                toast("That doesn't look like a Gemini API key. Copy it from aistudio.google.com/apikey.")
+                return
+            }
+            app.prefs.geminiKey = key
+            app.prefs.geminiModel = model
         }
-        app.prefs.apiKey = key
+        app.prefs.provider = formProvider
         app.prefs.userName = findViewById<EditText>(R.id.userName).text.toString()
-        app.prefs.model = findViewById<EditText>(R.id.model).text.toString()
         settings.visibility = View.GONE
         toast("Saved.")
     }
@@ -155,10 +195,10 @@ class MainActivity : Activity() {
     private fun hasMic() = checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
 
     private fun withMic(action: () -> Unit) {
-        if (app.prefs.apiKey.isBlank()) {
+        if (app.prefs.activeKey.isBlank()) {
             settings.visibility = View.VISIBLE
             fillSettings()
-            toast("Add your Anthropic API key first.")
+            toast("Add an API key in Settings first.")
             return
         }
         val needed = mutableListOf<String>()

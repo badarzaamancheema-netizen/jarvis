@@ -5,10 +5,12 @@ time, even with the screen off, and it answers out loud.
 
 ## Install it (no computer needed)
 
-1. **Get an Anthropic API key.** Go to https://console.anthropic.com, sign in,
-   add a few dollars of credit under *Billing*, then create a key under
-   *API keys*. It starts with `sk-ant-`. This is separate from a Claude.ai
-   subscription, and you pay per use.
+1. **Get a free Gemini API key.** On your phone, open https://aistudio.google.com/apikey,
+   sign in with your Google account, and tap **Create API key**. No card is
+   needed. Copy the key (it starts with `AIza`).
+   *Prefer Claude?* It's smarter but paid per use: get a key at
+   https://console.anthropic.com (starts with `sk-ant-`) and pick "Claude" in
+   Settings instead.
 2. **Download the app on your phone.** Open
    https://github.com/badarzaamancheema-netizen/jarvis/releases/tag/jarvis-latest
    and tap **Jarvis.apk**.
@@ -16,7 +18,7 @@ time, even with the screen off, and it answers out loud.
    installing from your browser or Files app. Allow it, then tap *Install*. If
    Play Protect warns that the app is unknown, tap *More details → Install anyway*.
    It's unknown because you built it yourself, not because it's harmful.
-4. **Set it up.** Open Jarvis, paste your API key, tap **Save**, then tap
+4. **Set it up.** Open Jarvis, leave "Free: Google Gemini" selected, paste your key, tap **Save**, then tap
    **Start listening for "Hi Jarvis"** and allow the microphone and notifications.
 5. **Recommended.** Under ⚙ Settings, tap each of these:
    - *Let Jarvis open apps when the screen is off.* Without it, "open YouTube"
@@ -49,11 +51,21 @@ up without saying "Hi Jarvis" again.
   it's waiting.
 - **Your command:** Google's speech recognizer, or the on-device model if
   Google's isn't available (for example, when the phone is locked).
-- **Brain:** Claude, through Anthropic's official Java SDK, with tools for the
-  phone and server-side web search. Tasks, notes and reminders are stored on
-  the phone.
+- **Brain:** Google Gemini on its free tier by default. Jarvis picks the newest
+  free Flash model automatically and switches to another one if a model's daily
+  free limit runs out. Or Claude, through Anthropic's official Java SDK, if you
+  choose it. Both get the same phone tools and web search. Tasks, notes and
+  reminders are stored on the phone.
 
 ## Honest limits
+
+- **Free isn't unlimited.** Gemini's free tier has per-minute and daily request
+  limits that Google changes without notice (see your key's page in AI Studio).
+  One spoken command can use 2-4 requests when Jarvis uses tools. If you run
+  out, Jarvis says so; wait a minute or until the daily reset.
+- **Free-tier privacy.** Google's terms let it use free-tier prompts to improve
+  its products, and human reviewers may read them. Don't dictate passwords or
+  anything private. The paid Claude option doesn't train on your data.
 
 - It uses more battery than normal, because the mic is always on.
 - Android may still stop it after a while on some brands, even with the

@@ -6,7 +6,9 @@ import android.app.NotificationManager
 import android.os.Handler
 import android.os.Looper
 import com.anthropic.client.okhttp.AnthropicOkHttpClient
+import com.jarvis.core.Assistant
 import com.jarvis.core.Brain
+import com.jarvis.core.GeminiBrain
 import com.jarvis.core.JarvisTools
 import com.jarvis.core.Store
 import com.jarvis.core.spokenError
@@ -25,7 +27,7 @@ class JarvisApp : Application() {
     /** Claude requests run one at a time, off the main thread. */
     private val worker = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
-    private var brain: Brain? = null
+    private var brain: Assistant? = null
     private var brainConfig: String? = null
 
     @Volatile var activityVisible = false
@@ -60,15 +62,22 @@ class JarvisApp : Application() {
         changed()
     }
 
-    /** Rebuilt whenever the key, model or name changes in settings. */
+    /** Rebuilt whenever the provider, key, model or name changes in settings. */
     @Synchronized
-    private fun currentBrain(): Brain? {
-        val key = prefs.apiKey
+    private fun currentBrain(): Assistant? {
+        val p = prefs
+        val key = p.activeKey
         if (key.isBlank()) return null
-        val config = "$key|${prefs.model}|${prefs.userName}"
+        val model = if (p.provider == Prefs.CLAUDE) p.claudeModel else p.geminiModel
+        val config = "${p.provider}|$key|$model|${p.userName}"
         if (config != brainConfig) {
-            val client = AnthropicOkHttpClient.builder().apiKey(key).timeout(Duration.ofSeconds(90)).build()
-            brain = Brain(client, JarvisTools(store, phone), prefs.model, prefs.userName)
+            val tools = JarvisTools(store, phone)
+            brain = if (p.provider == Prefs.CLAUDE) {
+                val client = AnthropicOkHttpClient.builder().apiKey(key).timeout(Duration.ofSeconds(90)).build()
+                Brain(client, tools, model, p.userName)
+            } else {
+                GeminiBrain(key, tools, model, p.userName)
+            }
             brainConfig = config
         }
         return brain
@@ -81,7 +90,7 @@ class JarvisApp : Application() {
         addLine("You", text)
         worker.execute {
             val reply = try {
-                currentBrain()?.ask(text) ?: "I need your Anthropic API key first. Open Jarvis and add it in Settings."
+                currentBrain()?.ask(text) ?: "I need an API key first. Open Jarvis and add one in Settings."
             } catch (e: Exception) {
                 spokenError(e)
             }
